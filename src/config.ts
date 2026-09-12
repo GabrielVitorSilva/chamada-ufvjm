@@ -5,20 +5,48 @@ export const root = path.resolve(
   import.meta.dirname,
   import.meta.dirname.includes(`${path.sep}dist${path.sep}`) ? "../.." : "..",
 );
+
+const bundledConfig: Config = {
+  publicUrl: "http://127.0.0.1:3017",
+  campus: {
+    name: "Campus JK da UFVJM — Diamantina/MG",
+    latitude: -18.2025,
+    longitude: -43.573,
+    radiusMeters: 150,
+    maxAccuracyMeters: 50,
+    demonstration: false,
+  },
+  days: [0, 1, 2, 3, 4, 5, 6],
+  blocks: [
+    ["08:00", "10:00"],
+    ["10:00", "12:00"],
+    ["12:00", "14:00"],
+    ["14:00", "16:00"],
+    ["16:00", "18:00"],
+    ["18:00", "20:00"],
+    ["20:00", "23:00"],
+  ],
+  locationTtlSeconds: 120,
+  retention: { photosDays: 90, locationsDays: 30 },
+};
+
 export function readConfig(): Config {
-  const c: Config = JSON.parse(
-    fs.readFileSync(
-      process.env.CONFIG_FILE ||
-        path.join(
-          root,
-          fs.existsSync(path.join(root, "config.json"))
-            ? "config.json"
-            : "config.example.json",
-        ),
-      "utf8",
-    ),
-  );
-  if (process.env.PUBLIC_URL) c.publicUrl = process.env.PUBLIC_URL;
+  const configPath =
+    process.env.CONFIG_FILE ||
+    path.join(
+      root,
+      fs.existsSync(path.join(root, "config.json"))
+        ? "config.json"
+        : "config.example.json",
+    );
+  // O arquivo local não acompanha necessariamente a função serverless da Vercel.
+  // O fallback mantém a configuração do Campus JK disponível nesse ambiente.
+  const c: Config = fs.existsSync(configPath)
+    ? JSON.parse(fs.readFileSync(configPath, "utf8"))
+    : structuredClone(bundledConfig);
+  c.publicUrl =
+    process.env.PUBLIC_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : c.publicUrl);
   const finite = (x: unknown, min: number, max: number) =>
     typeof x === "number" && Number.isFinite(x) && x >= min && x <= max;
   if (
