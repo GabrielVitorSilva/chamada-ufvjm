@@ -13,6 +13,7 @@
     "types": ["node"]
   },
   "include": [
+    "api/**/*.ts",
     "src/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
