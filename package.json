@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate && tsc",
+    "vercel-build": "prisma generate && prisma migrate deploy && tsc",
     "start": "node dist/src/server.js",
     "setup:local": "tsx scripts/setup-local.ts",
     "db:up": "docker compose up -d --wait",
