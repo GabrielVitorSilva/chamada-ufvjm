@@ -1,0 +1,69 @@
+generator client {
+ provider = "prisma-client"
+ output = "../src/generated/prisma"
+ moduleFormat = "esm"
+}
+datasource db {
+ provider = "postgresql"
+}
+enum Role {
+ student
+ admin
+}
+model User {
+ id Int @id @default(autoincrement())
+ name String @db.VarChar(100)
+ registration String @unique @db.VarChar(20)
+ password_hash String
+ role Role @default(student)
+ photo String?
+ created_at DateTime @default(now()) @db.Timestamptz(3)
+ registrationLocation RegistrationLocation?
+ attendance Attendance[]
+ attempts Attempt[]
+ @@map("users")
+}
+model Attendance {
+ id Int @id @default(autoincrement())
+ user_id Int
+ user User @relation(fields: [user_id], references: [id], onDelete: Restrict)
+ local_date String @db.VarChar(10)
+ block String @db.VarChar(11)
+ campus String
+ created_at DateTime @default(now()) @db.Timestamptz(3)
+ @@unique([user_id, local_date, block])
+ @@index([local_date, block])
+ @@map("attendance")
+}
+model Attempt {
+ id Int @id @default(autoincrement())
+ user_id Int?
+ user User? @relation(fields: [user_id], references: [id], onDelete: Restrict)
+ purpose String
+ reason String
+ latitude Float?
+ longitude Float?
+ accuracy Float?
+ created_at DateTime @default(now()) @db.Timestamptz(3)
+ @@index([created_at])
+ @@map("attempts")
+}
+model Session {
+ sid String @id
+ data Json
+ expires DateTime @db.Timestamptz(3)
+ @@index([expires])
+ @@map("sessions")
+}
+
+model RegistrationLocation {
+ id Int @id @default(autoincrement())
+ user_id Int @unique
+ user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+ latitude Float
+ longitude Float
+ accuracy Float
+ created_at DateTime @db.Timestamptz(3)
+ @@index([created_at])
+ @@map("registration_locations")
+}

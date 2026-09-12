@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#123d36" />
+    <title>Presença • Projeto universitário</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/" aria-label="Página inicial"
+        ><span class="mark">P<span>•</span></span
+        ><span>Presença<small>PROJETO UNIVERSITÁRIO · UFVJM</small></span></a
+      ><button id="logout" class="ghost" hidden>Sair</button>
+    </header>
+    <main>
+      <aside id="demo" class="notice" hidden>
+        Ambiente demonstrativo. O centro do campus está em 0°, 0°; configure os
+        dados reais antes do uso.
+      </aside>
+      <section id="welcome">
+        <div class="eyebrow">UM REGISTRO. UM MOMENTO.</div>
+        <h1>Sua presença,<br />de forma simples.</h1>
+        <p class="lead">
+          Registre sua participação no campus pelo celular, a cada bloco de
+          horário.
+        </p>
+        <div class="intro-grid">
+          <article class="card">
+            <span class="step">01</span>
+            <h2>Crie sua conta</h2>
+            <p>
+              Nome, matrícula, senha e uma foto inicial. A câmera abre após
+              obter sua localização, de qualquer lugar.
+            </p>
+          </article>
+          <article class="card">
+            <span class="step">02</span>
+            <h2>Confirme no campus</h2>
+            <p>
+              A cada chamada, toque para enviar uma nova localização. Sua
+              presença vale para todo o bloco atual.
+            </p>
+          </article>
+        </div>
+        <details class="privacy">
+          <summary>Como usamos seus dados</summary>
+          <p>
+            Este é um projeto universitário experimental, sem afirmação de
+            aprovação oficial da UFVJM. O cadastro não comprova vínculo com a
+            universidade.
+          </p>
+          <p>
+            No cadastro, salvamos sua localização atual e uma foto, sem
+            registrar presença e sem reconhecimento facial. Ela pode ser vista
+            por você e por administradores autorizados. Localização e precisão
+            são solicitadas apenas após seu toque, sem rastreamento contínuo.
+            Nas chamadas, leituras recusadas por área ou precisão são registradas. O cadastro pode ser realizado de qualquer lugar.
+          </p>
+          <p id="retention"></p>
+          <p>
+            Presenças e contas permanecem no histórico. A localização do
+            navegador pode ser adulterada; o registro não comprova permanência
+            no campus e não elimina fraudes.
+          </p>
+        </details>
+        <div class="auth-grid">
+          <form id="login" class="card">
+            <div class="eyebrow">JÁ TEM CADASTRO?</div>
+            <h2>Entre na sua conta</h2>
+            <label
+              >Matrícula ou acesso administrativo<input
+                name="registration"
+                inputmode="numeric"
+                autocomplete="username"
+                required
+                maxlength="20" /></label
+            ><label
+              >Senha<input
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                required
+                maxlength="72" /></label
+            ><button type="submit">Entrar</button>
+          </form>
+          <form id="register" class="card">
+            <div class="eyebrow">PRIMEIRO ACESSO</div>
+            <h2>Faça seu cadastro</h2>
+            <label
+              >Nome completo<input
+                name="name"
+                autocomplete="name"
+                required
+                minlength="3"
+                maxlength="100" /></label
+            ><label
+              >Matrícula<input
+                name="registration"
+                inputmode="numeric"
+                autocomplete="username"
+                pattern="[0-9]{4,20}"
+                required
+                maxlength="20"
+              /><small>De 4 a 20 dígitos.</small></label
+            ><label
+              >Senha<input
+                name="password"
+                type="password"
+                autocomplete="new-password"
+                required
+                minlength="12"
+                maxlength="72"
+              /><small
+                >Mínimo de 12 caracteres; máximo de 72 bytes.</small
+              ></label
+            ><label class="check"
+              ><input type="checkbox" required /> Li a explicação sobre a coleta
+              de foto e localização.</label
+            ><button type="submit">Salvar localização e continuar</button>
+            <p class="hint">
+              Seu navegador pedirá permissão. Nenhuma foto será salva antes da
+              confirmação.
+            </p>
+          </form>
+        </div>
+      </section>
+      <section id="capture" class="card capture" hidden>
+        <div class="eyebrow">CADASTRO · FOTO INICIAL</div>
+        <h1>Agora, sua foto.</h1>
+        <p>
+          Posicione seu rosto na prévia. Você pode refazer antes de confirmar.
+        </p>
+        <video id="video" autoplay playsinline muted></video
+        ><img id="preview" alt="Prévia da foto capturada" hidden /><canvas
+          id="canvas"
+          hidden
+        ></canvas>
+        <div class="actions">
+          <button id="snap">Capturar foto</button
+          ><button id="retake" class="secondary" hidden>Refazer</button
+          ><button id="confirm" hidden>Confirmar e concluir cadastro</button
+          ><button id="retry-geo" hidden>Renovar localização</button
+          ><button id="retry-camera" class="secondary" hidden>
+            Abrir câmera</button
+          ><button id="cancel" class="ghost">Cancelar</button>
+        </div>
+      </section>
+      <section id="dashboard" hidden>
+        <div class="eyebrow">SEU ESPAÇO</div>
+        <h1 id="greeting"></h1>
+        <div class="attendance-card">
+          <div>
+            <span class="pill">HORÁRIO DE BRASÍLIA</span>
+            <h2 id="current-block"></h2>
+            <p id="current-date"></p>
+            <p id="campus"></p>
+          </div>
+          <button id="attend">
+            Registrar presença <span aria-hidden="true">↗</span>
+          </button>
+          <p class="hint">Uma nova localização a cada bloco. Sem nova foto.</p>
+        </div>
+        <div class="section-title">
+          <h2>Seu histórico</h2>
+          <button id="my-photo" class="ghost">Ver minha foto</button>
+        </div>
+        <p class="hint">
+          A presença vale integralmente para o bloco indicado, mesmo perto do
+          fim. Ela não se estende ao próximo bloco.
+        </p>
+        <div id="history" class="record-list"></div>
+      </section>
+      <section id="admin" hidden>
+        <div class="section-title">
+          <div>
+            <div class="eyebrow">ADMINISTRAÇÃO</div>
+            <h2>Painel de acompanhamento</h2>
+          </div>
+        </div>
+        <div class="tabs" role="group" aria-label="Consultas administrativas">
+          <button data-tab="attendance">Presenças</button
+          ><button data-tab="students" class="secondary">Alunos</button
+          ><button data-tab="attempts" class="secondary">
+            Tentativas recusadas</button
+          ><button data-tab="qr" class="secondary">QR Code</button>
+        </div>
+        <form id="filters" class="filters">
+          <label>Data<input type="date" name="date" /></label
+          ><label
+            >Bloco<select name="block">
+              <option value="">Todos os blocos</option>
+            </select></label
+          ><button>Filtrar</button
+          ><a id="export" class="button secondary" href="/api/admin/export"
+            >Exportar CSV</a
+          >
+        </form>
+        <div id="admin-content" class="record-list"></div>
+        <div id="qr-panel" class="card" hidden>
+          <h2>Um endereço fixo para o projeto</h2>
+          <p>
+            Imprima e disponibilize no campus. O QR Code contém apenas a URL da
+            aplicação.
+          </p>
+          <img id="qr" alt="QR Code de acesso à aplicação" />
+          <p id="public-url"></p>
+          <a href="/api/admin/qr?download=1" class="button">Baixar QR Code</a>
+          <button id="print" class="secondary">Imprimir</button>
+        </div>
+      </section>
+      <div id="status" role="status" aria-live="polite" hidden></div>
+      <dialog id="photo-dialog">
+        <button id="close-photo" class="ghost">Fechar foto</button
+        ><img id="private-photo" alt="Foto privada do cadastro" />
+      </dialog>
+    </main>
+    <footer>
+      <strong>Presença</strong
+      ><span
+        >Projeto universitário experimental · UFVJM<br />Validação pontual, sem
+        rastreamento contínuo.</span
+      >
+    </footer>
+  </body>
+</html>

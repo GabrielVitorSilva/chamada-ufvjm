@@ -1,0 +1,8 @@
+node_modules/
+data/
+config.json
+.env
+dist/
+src/generated/
+.env.*
+!.env.example

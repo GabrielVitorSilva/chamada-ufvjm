@@ -1,0 +1,23 @@
+{
+  "publicUrl": "http://127.0.0.1:3017",
+  "campus": {
+    "name": "Campus JK da UFVJM — Diamantina/MG",
+    "latitude": -18.2025,
+    "longitude": -43.573,
+    "radiusMeters": 150,
+    "maxAccuracyMeters": 50,
+    "demonstration": false
+  },
+  "days": [0, 1, 2, 3, 4, 5, 6],
+  "blocks": [
+    ["08:00", "10:00"],
+    ["10:00", "12:00"],
+    ["12:00", "14:00"],
+    ["14:00", "16:00"],
+    ["16:00", "18:00"],
+    ["18:00", "20:00"],
+    ["20:00", "23:00"]
+  ],
+  "locationTtlSeconds": 120,
+  "retention": { "photosDays": 90, "locationsDays": 30 }
+}

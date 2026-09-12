@@ -1,0 +1,20 @@
+name: chamada-ufvjm
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chamada
+      POSTGRES_DB: chamada
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Execute npm run setup:local}
+    ports:
+      - "127.0.0.1:55437:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chamada -d chamada"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  postgres_data:
