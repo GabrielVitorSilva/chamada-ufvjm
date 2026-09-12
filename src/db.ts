@@ -7,6 +7,10 @@ import type { Config, Slot } from "./types.js";
 export function openDb(url = process.env.DATABASE_URL) {
   if (!url)
     throw Error("Defina DATABASE_URL para PostgreSQL. Consulte README.md.");
+  // O Prisma Postgres da integração da Vercel fornece uma URL prisma+postgres.
+  // Esse formato usa o modo Accelerate/Prisma Postgres, não o driver pg direto.
+  if (url.startsWith("prisma+postgres://"))
+    return new PrismaClient({ accelerateUrl: url });
   const schema = new URL(url).searchParams.get("schema") || "public";
   return new PrismaClient({
     adapter: new PrismaPg({ connectionString: url, max: 10 }, { schema }),
