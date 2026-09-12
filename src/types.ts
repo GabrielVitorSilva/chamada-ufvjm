@@ -34,7 +34,7 @@ declare module "express-session" {
 declare global {
   namespace Express {
     interface Request {
-      user?: Pick<User, "id" | "name" | "registration" | "role" | "photo">;
+      user?: Pick<User, "id" | "name" | "registration" | "photo">;
     }
   }
 }

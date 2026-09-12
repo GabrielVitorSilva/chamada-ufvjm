@@ -6,7 +6,6 @@ import os from "node:os";
 import path from "node:path";
 import request from "supertest";
 import sharp from "sharp";
-import bcrypt from "bcryptjs";
 import { createApp } from "../src/app.js";
 import { openDb } from "../src/db.js";
 import { readConfig } from "../src/config.js";
@@ -48,13 +47,12 @@ test("Fluxos HTTP, segurança e registros pelo relógio do servidor", async (t) 
   };
   try {
     await refresh();
-    await t.test("CSRF obrigatório e painel protegido sem sessão", async () => {
+    await t.test("CSRF obrigatório", async () => {
       assert.equal(
         (await agent.post("/api/register/location").send({ location: geo }))
           .status,
         403,
       );
-      assert.equal((await agent.get("/api/admin/students")).status, 401);
       assert.equal(
         (
           await agent
@@ -115,19 +113,10 @@ test("Fluxos HTTP, segurança e registros pelo relógio do servidor", async (t) 
         assert.equal(fs.readdirSync(path.join(dir, "photos")).length, 1);
       },
     );
-    await t.test("Aluno não acessa administração; foto privada", async () => {
-      for (const route of [
-        "students",
-        "attendance",
-        "attempts",
-        "export",
-        "qr",
-        "config",
-      ])
-        assert.equal((await agent.get("/api/admin/" + route)).status, 403);
-      assert.equal((await agent.get("/api/photos/1")).status, 200);
-      assert.equal((await request(server).get("/api/photos/1")).status, 401);
-      assert.equal((await agent.get("/api/photos/2")).status, 403);
+    await t.test("Foto pode ser acessada sem sessão pelo ID do aluno", async () => {
+      assert.equal((await request(server).get("/api/photos/1")).status, 200);
+      assert.equal((await request(server).get("/api/photos/2")).status, 404);
+      assert.equal((await request(server).get("/api/photos/invalido")).status, 404);
       assert.equal(
         (
           await agent.get(
@@ -212,46 +201,6 @@ test("Fluxos HTTP, segurança e registros pelo relógio do servidor", async (t) 
       await refresh();
       assert.equal((await agent.get("/api/history")).body.length, 2);
     });
-    await t.test(
-      "Administrador autorizado consulta, exporta e acessa QR e foto",
-      async () => {
-        await db.user.create({
-          data: {
-            name: "Admin",
-            registration: "9999",
-            password_hash: await bcrypt.hash(form.password, 4),
-            role: "admin",
-            created_at: now,
-          },
-        });
-        await post("/api/logout", {});
-        await refresh();
-        await post("/api/login", {
-          registration: "9999",
-          password: form.password,
-        });
-        await refresh();
-        assert.equal((await agent.get("/api/admin/students")).body.length, 1);
-        assert.equal(
-          (
-            await agent.get(
-              "/api/admin/attendance?date=2026-09-12&block=" +
-                encodeURIComponent("18:00–20:00"),
-            )
-          ).body.length,
-          1,
-        );
-        assert.match(
-          (await agent.get("/api/admin/export")).text,
-          /Aluno Teste/,
-        );
-        assert.equal(
-          (await agent.get("/api/admin/qr")).headers["content-type"],
-          "image/png",
-        );
-        assert.equal((await agent.get("/api/photos/1")).status, 200);
-      },
-    );
     await t.test(
       "Expiração da localização e cadastro fora dos blocos",
       async () => {

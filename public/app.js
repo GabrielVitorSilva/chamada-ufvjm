@@ -3,8 +3,7 @@ let csrf = "",
   user = null,
   stream = null,
   photo = null,
-  busy = false,
-  currentTab = "attendance";
+  busy = false;
 const show = (id, on) => ($(id).hidden = !on);
 function notify(message, error = false) {
   $("#status").textContent = message;
@@ -152,9 +151,6 @@ function card(title, detail, badge) {
 function date(v) {
   return v.split("-").reverse().join("/");
 }
-function timestamp(v) {
-  return new Date(v).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
-}
 async function history() {
   const rows = await api("/api/history");
   records($("#history"), rows, (r) =>
@@ -169,7 +165,6 @@ async function refresh() {
   show("#welcome", !user);
   show("#dashboard", !!user);
   show("#logout", !!user);
-  show("#admin", user?.role === "admin");
   $("#retention").textContent =
     `Fotos são excluídas após ${s.retention.photosDays} dias; localização inicial e coordenadas de tentativas recusadas após ${s.retention.locationsDays} dias, na rotina horária de retenção.`;
   if (user) {
@@ -180,15 +175,6 @@ async function refresh() {
     $("#campus").textContent = s.campus;
     show("#my-photo", user.hasPhoto);
     await history();
-    if (user.role === "admin") {
-      const c = await api("/api/admin/config");
-      $("#filters select").replaceChildren(
-        new Option("Todos os blocos", ""),
-        ...c.blocks.map((b) => new Option(b.join("–"), b.join("–"))),
-      );
-      $("#public-url").textContent = c.publicUrl;
-      await adminTab(currentTab);
-    }
   }
 }
 $("#login").addEventListener("submit", (e) => {
@@ -205,7 +191,6 @@ $("#logout").onclick = () =>
     stopCamera();
     await api("/api/logout", {});
     await refresh();
-    show("#admin", false);
     notify("Sessão encerrada.");
   });
 $("#register").addEventListener("submit", (e) => {
@@ -296,7 +281,7 @@ $("#attend").onclick = () =>
   });
 async function openPhoto(id) {
   const res = await fetch("/api/photos/" + id);
-  if (!res.ok) throw Error("Foto indisponível ou acesso não autorizado.");
+  if (!res.ok) throw Error("Foto indisponível.");
   const image = $("#private-photo");
   if (image.dataset.url) URL.revokeObjectURL(image.dataset.url);
   image.dataset.url = URL.createObjectURL(await res.blob());
@@ -311,61 +296,6 @@ $("#photo-dialog").addEventListener("close", () => {
   im.removeAttribute("src");
   delete im.dataset.url;
 });
-function query() {
-  return new URLSearchParams(new FormData($("#filters"))).toString();
-}
-async function adminTab(tab) {
-  currentTab = tab;
-  show("#filters", tab === "attendance");
-  show("#qr-panel", tab === "qr");
-  show("#admin-content", tab !== "qr");
-  document
-    .querySelectorAll("[data-tab]")
-    .forEach((b) => b.classList.toggle("secondary", b.dataset.tab !== tab));
-  if (tab === "qr") {
-    $("#qr").src = "/api/admin/qr";
-    return;
-  }
-  const rows = await api(
-    "/api/admin/" + tab + (tab === "attendance" ? "?" + query() : ""),
-  );
-  $("#export").href = "/api/admin/export?" + query();
-  records($("#admin-content"), rows, (r) => {
-    if (tab === "attendance")
-      return card(
-        r.name + " · " + r.registration,
-        `${date(r.local_date)} · ${r.block} · ${r.campus}`,
-        "Presença integral",
-      );
-    if (tab === "students") {
-      const el = card(
-        r.name,
-        r.registration + " · Cadastro: " + timestamp(r.created_at),
-      );
-      if (r.hasPhoto) {
-        const b = document.createElement("button");
-        b.className = "secondary";
-        b.textContent = "Ver foto";
-        b.onclick = () => action(() => openPhoto(r.id));
-        el.append(b);
-      }
-      return el;
-    }
-    return card(
-      r.name
-        ? `${r.name} · ${r.registration}`
-        : "Tentativa de cadastro sem identificação",
-      `${timestamp(r.created_at)} · ${r.reason === "OUTSIDE" ? "Fora da área permitida" : "Localização imprecisa"} · ${r.latitude === null ? "Localização excluída pela retenção" : `${r.latitude}, ${r.longitude} · precisão ${Math.round(r.accuracy)} m`}`,
-    );
-  });
-}
-for (const b of document.querySelectorAll("[data-tab]"))
-  b.onclick = () => action(() => adminTab(b.dataset.tab));
-$("#filters").onsubmit = (e) => {
-  e.preventDefault();
-  action(() => adminTab("attendance"));
-};
-$("#print").onclick = () => window.print();
 window.addEventListener("pagehide", stopCamera);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && stream) {

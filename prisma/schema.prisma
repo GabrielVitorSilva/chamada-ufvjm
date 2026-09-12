@@ -6,16 +6,11 @@ generator client {
 datasource db {
  provider = "postgresql"
 }
-enum Role {
- student
- admin
-}
 model User {
  id Int @id @default(autoincrement())
  name String @db.VarChar(100)
  registration String @unique @db.VarChar(20)
  password_hash String
- role Role @default(student)
  photo String?
  created_at DateTime @default(now()) @db.Timestamptz(3)
  registrationLocation RegistrationLocation?

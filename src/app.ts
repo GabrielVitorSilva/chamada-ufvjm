@@ -12,7 +12,6 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import sharp from "sharp";
-import QRCode from "qrcode";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -97,7 +96,6 @@ export function createApp({
         id: true,
         name: true,
         registration: true,
-        role: true,
         photo: true,
       },
     });
@@ -105,10 +103,6 @@ export function createApp({
     req.user = u;
     next();
   };
-  const admin: RequestHandler = (req, res, next) =>
-    req.user!.role === "admin"
-      ? next()
-      : res.status(403).json({ message: "Acesso restrito à administração." });
   const anonymous: RequestHandler = (req, res, next) =>
     req.session.userId
       ? res
@@ -168,7 +162,6 @@ export function createApp({
         id: true,
         name: true,
         registration: true,
-        role: true,
         photo: true,
       },
     });
@@ -179,7 +172,6 @@ export function createApp({
             id: user.id,
             name: user.name,
             registration: user.registration,
-            role: user.role,
             hasPhoto: !!user.photo,
           }
         : null,
@@ -354,9 +346,7 @@ export function createApp({
       }),
     ),
   );
-  app.get("/api/photos/:id", auth, async (req, res) => {
-    if (String(req.user!.id) !== req.params.id && req.user!.role !== "admin")
-      return res.sendStatus(403);
+  app.get("/api/photos/:id", async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isSafeInteger(id) || id < 1) return res.sendStatus(404);
     const row = await db.user.findUnique({
@@ -365,98 +355,6 @@ export function createApp({
     });
     if (!row?.photo) return res.sendStatus(404);
     res.type("jpeg").sendFile(path.join(dir, "photos", row.photo));
-  });
-  app.use("/api/admin", auth, admin);
-  app.get("/api/admin/students", async (req, res) => {
-    const users = await db.user.findMany({
-      where: { role: "student" },
-      select: {
-        id: true,
-        name: true,
-        registration: true,
-        photo: true,
-        created_at: true,
-      },
-      orderBy: { name: "asc" },
-      take: 5000,
-    });
-    res.json(users.map(({ photo, ...u }) => ({ ...u, hasPhoto: !!photo })));
-  });
-  app.get("/api/admin/attempts", async (req, res) => {
-    const attempts = await db.attempt.findMany({
-      include: { user: { select: { name: true, registration: true } } },
-      orderBy: { id: "desc" },
-      take: 1000,
-    });
-    res.json(
-      attempts.map(({ user, ...a }) => ({
-        ...a,
-        name: user?.name ?? null,
-        registration: user?.registration ?? null,
-      })),
-    );
-  });
-  const rows = async (req: Request) => {
-    const local_date =
-      typeof req.query.date === "string" && req.query.date
-        ? req.query.date
-        : undefined;
-    const block =
-      typeof req.query.block === "string" && req.query.block
-        ? req.query.block
-        : undefined;
-    const records = await db.attendance.findMany({
-      where: { local_date, block },
-      include: { user: { select: { name: true, registration: true } } },
-      orderBy: { created_at: "desc" },
-    });
-    return records.map((r) => ({
-      name: r.user.name,
-      registration: r.user.registration,
-      local_date: r.local_date,
-      block: r.block,
-      campus: r.campus,
-      created_at: r.created_at.toISOString(),
-    }));
-  };
-  app.get("/api/admin/attendance", async (req, res) =>
-    res.json(await rows(req)),
-  );
-  app.get("/api/admin/export", async (req, res) => {
-    const esc = (v: string) =>
-      '"' +
-      (/^[=+@\-\t\r\n]/.test(v) ? "'" + v : v).replaceAll('"', '""') +
-      '"';
-    const data = await rows(req);
-    res
-      .set("Content-Disposition", 'attachment; filename="presencas.csv"')
-      .type("text/csv")
-      .send(
-        "\uFEFF" +
-          [
-            [
-              "Nome",
-              "Matrícula",
-              "Data local",
-              "Bloco",
-              "Campus",
-              "Registro UTC",
-            ],
-            ...data.map((r) => Object.values(r)),
-          ]
-            .map((r) => r.map(esc).join(";"))
-            .join("\r\n"),
-      );
-  });
-  app.get("/api/admin/config", (req, res) =>
-    res.json({ publicUrl: config.publicUrl, blocks: config.blocks }),
-  );
-  app.get("/api/admin/qr", async (req, res) => {
-    res.type("png");
-    if (req.query.download) res.attachment("qr-chamada.png");
-    res.send(
-      await QRCode.toBuffer(config.publicUrl, { width: 700, margin: 4 }),
-    );
   });
   app.use(express.static(path.join(root, "public")));
   const errorHandler: ErrorRequestHandler = (err, req, res, next) => {

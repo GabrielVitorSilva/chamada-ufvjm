@@ -153,66 +153,6 @@ try {
       fullPage: true,
     });
 
-  // Painel real com conta administrativa criada somente no banco temporário.
-  const student = await db.user.findUniqueOrThrow({
-    where: { registration: "20269999" },
-  });
-  await db.user.create({
-    data: {
-      name: "Admin UI",
-      registration: "9999",
-      password_hash: student.password_hash,
-      role: "admin",
-    },
-  });
-  await page.locator("#login [name=registration]").fill("9999");
-  await page.locator("#login [name=password]").fill("senha-interface-123");
-  await page.locator("#login button").click();
-  await page.locator("#admin").waitFor({ state: "visible" });
-  await page
-    .getByRole("status")
-    .filter({ hasText: "Login realizado" })
-    .waitFor();
-  await page.locator("[data-tab=students]").click();
-  await page
-    .locator("#admin-content")
-    .getByText("Aluno Interface", { exact: true })
-    .waitFor();
-  await page
-    .locator("#admin-content")
-    .getByRole("button", { name: "Ver foto" })
-    .click();
-  await page.locator("#photo-dialog").waitFor({ state: "visible" });
-  await page.locator("#close-photo").click();
-  await page.locator("[data-tab=attempts]").click();
-  await page
-    .locator("#admin-content")
-    .getByText("Aluno Interface · 20269999", { exact: true })
-    .first()
-    .waitFor();
-  await page.locator("[data-tab=qr]").click();
-  await page.waitForFunction(
-    () => document.querySelector<HTMLImageElement>("#qr")!.naturalWidth > 0,
-  );
-  assert.equal(await page.locator("#public-url").innerText(), url);
-  await page.setViewportSize({ width: 390, height: 844 });
-  assert.equal(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth,
-    ),
-    true,
-    "admin sem overflow móvel",
-  );
-  await page.locator("[data-tab=attendance]").click();
-  await page.locator("#filters [name=date]").fill("2026-09-12");
-  await page.locator("#filters button").click();
-  await page
-    .locator("#admin-content")
-    .getByText("Aluno Interface · 20269999", { exact: true })
-    .waitFor();
-  const downloaded = page.waitForEvent("download");
-  await page.locator("#export").click();
-  assert.equal((await downloaded).suggestedFilename(), "presencas.csv");
   // Timeout seguido de sucesso: usa nova leitura, mas preserva o limite de precisão.
   await page.evaluate(() => {
     let calls = 0;
