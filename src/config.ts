@@ -18,6 +18,7 @@ export function readConfig(): Config {
       "utf8",
     ),
   );
+  if (process.env.PUBLIC_URL) c.publicUrl = process.env.PUBLIC_URL;
   const finite = (x: unknown, min: number, max: number) =>
     typeof x === "number" && Number.isFinite(x) && x >= min && x <= max;
   if (

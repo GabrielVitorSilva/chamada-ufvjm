@@ -4,6 +4,25 @@ MVP com backend em **TypeScript estrito, Express, Prisma ORM 7 e PostgreSQL 17**
 
 ## Executar localmente
 
+## Deploy na Vercel
+
+Na tela de importação mostrada, mantenha o preset Express, o diretório raiz `/` e o comando de build `npm run build`. O arquivo `vercel.json` já configura a função TypeScript `api/index.ts` e encaminha as rotas `/api/*` para ela.
+
+Antes de criar o projeto, adicione estas variáveis no bloco **Environment Variables** (Production, Preview e Development):
+
+```text
+DATABASE_URL=postgresql://...        # PostgreSQL externo, por exemplo Prisma Postgres/Neon/Supabase
+SESSION_SECRET=<segredo aleatório com pelo menos 32 caracteres>
+PUBLIC_URL=https://seu-projeto.vercel.app
+NODE_ENV=production
+```
+
+Depois de criar o projeto, copie a URL HTTPS gerada pela Vercel para `PUBLIC_URL` e faça um redeploy. Em outro terminal, com acesso ao mesmo `DATABASE_URL`, execute `npm run db:migrate` para criar/atualizar as tabelas antes do primeiro uso. Crie o administrador localmente com `DATABASE_URL` apontando para esse mesmo PostgreSQL: `npm run admin`.
+
+Não use o PostgreSQL do `compose.yaml` na Vercel: ele fica no notebook e não é acessível pela internet. O banco precisa ser hospedado externamente. A Vercel também não fornece disco persistente para `data/photos`; esta versão ainda grava fotos no filesystem local, portanto as fotos podem desaparecer quando a função for reciclada. Para produção, configure um storage persistente (Vercel Blob, S3 ou equivalente) e adapte `src/app.ts` antes de publicar o cadastro com fotos. O banco, Prisma e as sessões já funcionam em PostgreSQL externo.
+
+Geolocalização e câmera exigem HTTPS, que a Vercel fornece automaticamente. O navegador ainda precisa conceder as permissões.
+
 Requer Node.js 22.12+ e npm. Para o PostgreSQL local, mantenha o Docker em execução.
 
 ```sh
