@@ -3,7 +3,10 @@
   "installCommand": "npm install --include=dev",
   "buildCommand": "npm run build",
   "functions": {
-    "api/index.ts": { "maxDuration": 30 }
+    "api/index.ts": {
+      "maxDuration": 30,
+      "includeFiles": "public/**"
+    }
   },
-  "rewrites": [{ "source": "/api/:path*", "destination": "/api" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
 }
