@@ -207,12 +207,12 @@ export function createApp({
       typeof registration !== "string" ||
       !/^\d{4,20}$/.test(registration) ||
       typeof password !== "string" ||
-      password.length < 12 ||
+      password.length < 8 ||
       Buffer.byteLength(password) > 72
     )
       return res.status(400).json({
         message:
-          "Informe nome, curso, matrícula e senha (mínimo 12 caracteres).",
+          "Informe nome, curso, matrícula e senha (mínimo 8 caracteres).",
       });
     const proof = req.session.proof;
     if (
