@@ -9,6 +9,7 @@ datasource db {
 model User {
  id Int @id @default(autoincrement())
  name String @db.VarChar(100)
+ course String? @db.VarChar(150)
  registration String @unique @db.VarChar(20)
  password_hash String
  photo String?

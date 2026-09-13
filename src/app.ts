@@ -196,11 +196,14 @@ export function createApp({
     result(res, "APPROVED");
   });
   app.post("/api/register", limiter, anonymous, async (req, res) => {
-    const { name, registration, password, photo } = req.body;
+    const { name, course, registration, password, photo } = req.body;
     if (
       typeof name !== "string" ||
       name.trim().length < 3 ||
       name.length > 100 ||
+      typeof course !== "string" ||
+      course.trim().length < 2 ||
+      course.length > 150 ||
       typeof registration !== "string" ||
       !/^\d{4,20}$/.test(registration) ||
       typeof password !== "string" ||
@@ -209,7 +212,7 @@ export function createApp({
     )
       return res.status(400).json({
         message:
-          "Informe nome (3–100 caracteres), matrícula (4–20 dígitos) e senha (mínimo 12 caracteres, máximo 72 bytes).",
+          "Informe nome, curso, matrícula e senha (mínimo 12 caracteres).",
       });
     const proof = req.session.proof;
     if (
@@ -263,6 +266,7 @@ export function createApp({
         const row = await tx.user.create({
           data: {
             name: name.trim(),
+            course: course.trim(),
             registration,
             password_hash: hash,
             photo: filename,
